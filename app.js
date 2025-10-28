@@ -15,6 +15,7 @@ app.use(express.json());
 app.use(express.static('public'));
 app.use('/uploads', express.static('public/uploads'));
 
+// Database connection - Neon
 const pool = new Pool({
   user: 'gen_user',
   host: 'c98956375b5e3a754597fbcd.twc1.net',
@@ -25,8 +26,8 @@ const pool = new Pool({
     rejectUnauthorized: false
   },
   max: 20,
-  idleTimeoutMillis: 50000,
-  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
 pool.connect((err, client, release) => {
@@ -41,12 +42,14 @@ pool.connect((err, client, release) => {
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const uploadDir = 'public/uploads/avatars';
+    // Создаем директорию если не существует
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
+    // Генерируем уникальное имя файла
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
   }
@@ -68,7 +71,7 @@ const upload = multer({
 });
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || 'secret-key-here';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
 
 // Auth middleware
 const authenticate = (req, res, next) => {
